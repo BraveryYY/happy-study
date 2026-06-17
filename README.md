@@ -31,6 +31,12 @@ Web 预览：
 npm run web
 ```
 
+线上预览：
+
+[https://braveryyy.github.io/happy-study/](https://braveryyy.github.io/happy-study/)
+
+GitHub Pages 已配置为通过 GitHub Actions 自动发布。推送到 `main` 或 `codex/k12-ios-app` 后，会自动执行类型检查、导出 Web 静态产物，并部署最新页面。
+
 静态构建与预览：
 
 ```bash

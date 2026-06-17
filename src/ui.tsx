@@ -12,27 +12,29 @@ import {
 } from 'react-native';
 
 export const colors = {
-  ink: '#172033',
-  muted: '#657086',
-  faint: '#8B95A8',
-  paper: '#FBFCF8',
+  ink: '#1C1C1E',
+  muted: '#636366',
+  faint: '#8E8E93',
+  paper: '#F2F2F7',
   surface: '#FFFFFF',
-  line: '#E2E7EE',
-  navy: '#243B6B',
-  teal: '#1A8A8A',
-  mint: '#DFF4EA',
-  gold: '#E0A82E',
-  rose: '#E86E6E',
-  coral: '#F08B62',
-  blue: '#4779D4',
-  lavender: '#8D6FD1',
-  green: '#2A9D68',
+  line: '#D1D1D6',
+  navy: '#007AFF',
+  teal: '#30B0C7',
+  mint: '#EAF8F1',
+  gold: '#FF9500',
+  rose: '#FF3B30',
+  coral: '#FF9500',
+  blue: '#007AFF',
+  lavender: '#AF52DE',
+  green: '#34C759',
+  grouped: '#F2F2F7',
+  secondary: '#F9F9FB',
 };
 
 export const typeColor = {
-  teacher: colors.navy,
-  parent: colors.teal,
-  student: colors.coral,
+  teacher: colors.blue,
+  parent: colors.green,
+  student: colors.gold,
 };
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
@@ -255,12 +257,12 @@ export function EmptyState({
 export const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
-    borderColor: colors.line,
+    borderColor: '#E5E5EA',
     borderWidth: 1,
     borderRadius: 8,
     padding: 14,
     gap: 10,
-    boxShadow: '0px 8px 18px rgba(13, 20, 36, 0.08)',
+    boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.04)',
   },
   sectionTitle: {
     marginTop: 18,
@@ -272,15 +274,15 @@ export const styles = StyleSheet.create({
   },
   eyebrow: {
     color: colors.faint,
-    fontSize: 11,
-    fontWeight: '800',
+    fontSize: 12,
+    fontWeight: '700',
     textTransform: 'uppercase',
   },
   sectionText: {
     color: colors.ink,
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '800',
-    lineHeight: 23,
+    lineHeight: 25,
   },
   pill: {
     alignSelf: 'flex-start',
@@ -293,15 +295,15 @@ export const styles = StyleSheet.create({
     gap: 5,
   },
   pillText: {
-    fontSize: 11,
-    fontWeight: '800',
+    fontSize: 12,
+    fontWeight: '700',
   },
   iconButton: {
     minHeight: 38,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.surface,
+    borderColor: '#E5E5EA',
+    backgroundColor: colors.secondary,
     paddingHorizontal: 10,
     paddingVertical: 8,
     alignItems: 'center',
@@ -311,7 +313,7 @@ export const styles = StyleSheet.create({
   },
   iconButtonText: {
     color: colors.ink,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '800',
   },
   pressed: {
@@ -320,7 +322,7 @@ export const styles = StyleSheet.create({
   },
   segmented: {
     borderRadius: 8,
-    backgroundColor: '#EEF2F6',
+    backgroundColor: '#E9E9EE',
     borderWidth: 1,
     borderColor: colors.line,
     padding: 4,
@@ -347,7 +349,7 @@ export const styles = StyleSheet.create({
   progressOuter: {
     height: 8,
     borderRadius: 8,
-    backgroundColor: '#E8EDF3',
+    backgroundColor: '#E5E5EA',
     overflow: 'hidden',
   },
   progressInner: {
@@ -358,9 +360,9 @@ export const styles = StyleSheet.create({
     flex: 1,
     minWidth: 96,
     borderWidth: 1,
-    borderColor: colors.line,
+    borderColor: '#E5E5EA',
     borderRadius: 8,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.secondary,
     padding: 10,
     gap: 5,
   },
@@ -395,8 +397,8 @@ export const styles = StyleSheet.create({
     minHeight: 42,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.surface,
+    borderColor: '#E5E5EA',
+    backgroundColor: colors.secondary,
     paddingHorizontal: 11,
     paddingVertical: 9,
     color: colors.ink,
@@ -428,19 +430,19 @@ export const styles = StyleSheet.create({
 const toneStyles = StyleSheet.create({
   plain: {},
   mint: {
-    backgroundColor: '#F4FBF7',
-    borderColor: '#BFE8D2',
+    backgroundColor: '#F7FFF9',
+    borderColor: '#CDEDD8',
   },
   blue: {
-    backgroundColor: '#F5F8FF',
-    borderColor: '#C9D8FA',
+    backgroundColor: '#F7FAFF',
+    borderColor: '#D6E8FF',
   },
   gold: {
-    backgroundColor: '#FFF8E8',
-    borderColor: '#F0D28A',
+    backgroundColor: '#FFF9EF',
+    borderColor: '#FFE0A3',
   },
   rose: {
-    backgroundColor: '#FFF6F4',
-    borderColor: '#F4C8BD',
+    backgroundColor: '#FFF6F6',
+    borderColor: '#FFD1D1',
   },
 });

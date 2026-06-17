@@ -108,6 +108,27 @@ export type ClassRoom = {
   wall: Array<{ author: string; text: string; tag: string }>;
 };
 
+export type TeacherAsset = {
+  id: string;
+  title: string;
+  type: 'course' | 'material' | 'exam' | 'service';
+  status: 'ready' | 'draft' | 'review';
+  owner: string;
+  usage: number;
+  nextAction: string;
+};
+
+export type TeachingRoom = {
+  id: string;
+  name: string;
+  type: 'online' | 'offline';
+  capacity: number;
+  occupancy: number;
+  schedule: string;
+  equipment: string[];
+  status: 'available' | 'booked' | 'maintenance';
+};
+
 export const roleLabels: Record<Role, string> = {
   teacher: '老师',
   parent: '家长',
@@ -250,6 +271,78 @@ export const seedClasses: ClassRoom[] = [
       { author: '林亦辰', text: '我把第 4 题的去分母步骤录成了 40 秒讲解。', tag: '同伴讲解' },
       { author: '林妈妈', text: '孩子愿意主动讲错题了，今晚在家再复述一次。', tag: '家校共育' },
     ],
+  },
+];
+
+export const seedTeacherAssets: TeacherAsset[] = [
+  {
+    id: 'ta1',
+    title: '七年级数学系统课',
+    type: 'course',
+    status: 'ready',
+    owner: '周老师',
+    usage: 18,
+    nextAction: '下周补充分式方程第 3 讲讲义',
+  },
+  {
+    id: 'ta2',
+    title: '期中诊断卷 A/B 版',
+    type: 'exam',
+    status: 'review',
+    owner: '周老师',
+    usage: 11,
+    nextAction: '核对科学实验题答案解析',
+  },
+  {
+    id: 'ta3',
+    title: '阅读推断题证据链卡片',
+    type: 'material',
+    status: 'ready',
+    owner: '王老师',
+    usage: 24,
+    nextAction: '沉淀 3 个课堂追问模板',
+  },
+  {
+    id: 'ta4',
+    title: '一对一课后反馈服务包',
+    type: 'service',
+    status: 'draft',
+    owner: '周老师',
+    usage: 6,
+    nextAction: '完善家长周报样例',
+  },
+];
+
+export const seedTeachingRooms: TeachingRoom[] = [
+  {
+    id: 'room1',
+    name: '线上小班教室 A',
+    type: 'online',
+    capacity: 12,
+    occupancy: 9,
+    schedule: '今晚 19:30 数学强化班',
+    equipment: ['录播', '白板', '随堂测'],
+    status: 'booked',
+  },
+  {
+    id: 'room2',
+    name: '线下教室 2',
+    type: 'offline',
+    capacity: 8,
+    occupancy: 5,
+    schedule: '明天 10:00 五年级阅读课',
+    equipment: ['投屏', '讲义打印', '错题盒'],
+    status: 'available',
+  },
+  {
+    id: 'room3',
+    name: '试听咨询室',
+    type: 'online',
+    capacity: 4,
+    occupancy: 2,
+    schedule: '周六 15:00 2 组试听',
+    equipment: ['试听卷', '家长沟通表'],
+    status: 'available',
   },
 ];
 

@@ -83,7 +83,7 @@ function roleName(role: Role) {
 
 export default function App() {
   const { width } = useWindowDimensions();
-  const [role, setRole] = useState<Role>('teacher');
+  const [role, setRole] = useState<Role | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey>('dashboard');
   const [students, setStudents] = useState(seedStudents);
   const [selectedStudentId, setSelectedStudentId] = useState(seedStudents[0].id);
@@ -104,13 +104,19 @@ export default function App() {
     () => buildDiagnostic(selectedStudent, resources, aiConfig),
     [selectedStudent, resources, aiConfig, diagnosisRun],
   );
-  const currentTabs = tabsByRole[role];
+  const currentTabs = role ? tabsByRole[role] : [];
   const heroGap = highestGap(selectedStudent);
   const shellMaxWidth = width > 780 ? 430 : undefined;
 
-  const changeRole = (next: Role) => {
+  const enterRole = (next: Role) => {
     setRole(next);
     setActiveTab(tabsByRole[next][0].key);
+    setAnswered({});
+  };
+
+  const leaveRole = () => {
+    setRole(null);
+    setActiveTab('dashboard');
     setAnswered({});
   };
 
@@ -120,14 +126,15 @@ export default function App() {
 
   const addNote = () => {
     const text = noteText.trim();
-    if (!text) return;
+    if (!text || !role) return;
+    const currentRole = role;
     updateStudent((student) => ({
       ...student,
       notes: [
         {
           id: `n-${Date.now()}`,
-          role,
-          author: role === 'teacher' ? student.mentor : role === 'parent' ? student.guardian : student.name,
+          role: currentRole,
+          author: currentRole === 'teacher' ? student.mentor : currentRole === 'parent' ? student.guardian : student.name,
           text,
           date: today,
         },
@@ -139,14 +146,15 @@ export default function App() {
 
   const addCustomField = () => {
     const text = customValue.trim();
-    if (!text) return;
+    if (!text || !role) return;
+    const currentRole = role;
     updateStudent((student) => ({
       ...student,
       customFields: [
         {
-          label: `${roleName(role)}补充`,
+          label: `${roleName(currentRole)}补充`,
           value: text,
-          owner: role,
+          owner: currentRole,
         },
         ...student.customFields,
       ],
@@ -195,7 +203,8 @@ export default function App() {
 
   const joinClass = () => {
     const code = joinCode.trim().toUpperCase();
-    if (!code) return;
+    if (!code || !role) return;
+    const currentRole = role;
     setClasses((current) =>
       current.map((item) =>
         item.code === code
@@ -205,7 +214,7 @@ export default function App() {
               wall: [
                 {
                   author: selectedStudent.name,
-                  text: `${roleName(role)}视角加入班级，准备参与本周挑战。`,
+                  text: `${roleName(currentRole)}视角加入班级，准备参与本周挑战。`,
                   tag: '加入',
                 },
                 ...item.wall,
@@ -234,21 +243,23 @@ export default function App() {
     }));
   };
 
-  const renderScreen = () => {
+  const renderScreen = (currentRole: Role) => {
     if (activeTab === 'dashboard') {
       return (
         <DashboardScreen
-          role={role}
+          role={currentRole}
           student={selectedStudent}
           report={report}
-          onOpenDiagnosis={() => setActiveTab(role === 'student' ? 'practice' : role === 'parent' ? 'plans' : 'diagnosis')}
+          onOpenDiagnosis={() =>
+            setActiveTab(currentRole === 'student' ? 'practice' : currentRole === 'parent' ? 'plans' : 'diagnosis')
+          }
         />
       );
     }
     if (activeTab === 'profile') {
       return (
         <ProfileScreen
-          role={role}
+          role={currentRole}
           student={selectedStudent}
           students={students}
           resources={resources}
@@ -270,7 +281,7 @@ export default function App() {
     if (activeTab === 'diagnosis' || activeTab === 'plans') {
       return (
         <DiagnosisScreen
-          role={role}
+          role={currentRole}
           student={selectedStudent}
           report={report}
           resources={resources}
@@ -285,7 +296,7 @@ export default function App() {
     }
     return (
       <ClassroomScreen
-        role={role}
+        role={currentRole}
         student={selectedStudent}
         classes={classes}
         reaction={reaction}
@@ -300,54 +311,154 @@ export default function App() {
     );
   };
 
+  if (!role) {
+    return (
+      <SafeAreaView style={screen.safe}>
+        <StatusBar style="dark" />
+        <View style={[screen.shell, shellMaxWidth ? { maxWidth: shellMaxWidth } : null]}>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={screen.content}>
+            <IdentityScreen onEnterRole={enterRole} />
+          </ScrollView>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={screen.safe}>
       <StatusBar style="dark" />
       <View style={[screen.shell, shellMaxWidth ? { maxWidth: shellMaxWidth } : null]}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={screen.content}>
-          <AppHeader
+          <RoleWorkspaceHeader
             role={role}
             student={selectedStudent}
-            onRoleChange={changeRole}
+            tabs={currentTabs}
+            activeTab={activeTab}
+            onBack={leaveRole}
+            onChangeTab={setActiveTab}
             onSelectStudent={setSelectedStudentId}
             students={students}
           />
-          {renderScreen()}
+          {renderScreen(role)}
         </ScrollView>
-        <BottomTabs tabs={currentTabs} active={activeTab} role={role} onChange={setActiveTab} />
       </View>
     </SafeAreaView>
   );
 }
 
-function AppHeader({
+function IdentityScreen({ onEnterRole }: { onEnterRole: (role: Role) => void }) {
+  const identityCopy: Record<Role, { title: string; detail: string; points: string[] }> = {
+    teacher: {
+      title: '老师工作台',
+      detail: '管理班级、维护公共资料库、发起 AI 诊断与分层训练。',
+      points: ['班级与学生管理', '公共资料库维护', '诊断与教学计划'],
+    },
+    parent: {
+      title: '家长共育页',
+      detail: '查看孩子画像、接收家庭陪跑计划、参与班级互动。',
+      points: ['孩子资料共维', '家庭提升计划', '班级互动反馈'],
+    },
+    student: {
+      title: '学生学习页',
+      detail: '查看自己的学习任务、完成强化训练、参与同伴讲解。',
+      points: ['我的学习台', '针对性强化练', '班级气氛榜'],
+    },
+  };
+
+  return (
+    <View style={screen.header}>
+      <View style={screen.identityHero}>
+        <View style={screen.brandMark}>
+          <Icon name="sparkles" color={colors.surface} size={26} />
+        </View>
+        <Text style={screen.identityTitle}>课伴星 K12</Text>
+        <Text style={screen.identitySubtitle}>请选择身份进入对应二级页面</Text>
+        <Text style={screen.identityBody}>
+          同一个 iOS App 承载老师、家长、学生三种使用端；首页只负责身份选择，选择后进入各自独立工作台。
+        </Text>
+      </View>
+
+      <SectionTitle eyebrow="Identity" title="选择你的身份" />
+      <View style={screen.stack}>
+        {roleOptions.map((option) => {
+          const copy = identityCopy[option.value];
+          return (
+            <Pressable
+              key={option.value}
+              accessibilityRole="button"
+              accessibilityLabel={`进入${copy.title}`}
+              onPress={() => onEnterRole(option.value)}
+              style={({ pressed }) => [pressed && uiStyles.pressed]}
+            >
+              <Card style={[screen.identityCard, { borderColor: `${option.color}40` }]}>
+                <View style={[screen.identityIcon, { backgroundColor: option.color }]}>
+                  <Icon name={option.icon} color={colors.surface} size={24} />
+                </View>
+                <View style={screen.identityContent}>
+                  <View style={screen.cardHeader}>
+                    <Text style={screen.bigText}>{copy.title}</Text>
+                    <Icon name="chevron-forward" color={option.color} />
+                  </View>
+                  <Text style={screen.mutedText}>{copy.detail}</Text>
+                  <View style={screen.wrapRow}>
+                    {copy.points.map((point) => (
+                      <Pill key={point} color={option.color}>
+                        {point}
+                      </Pill>
+                    ))}
+                  </View>
+                </View>
+              </Card>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+function RoleWorkspaceHeader({
   role,
   student,
   students,
-  onRoleChange,
+  tabs,
+  activeTab,
+  onBack,
+  onChangeTab,
   onSelectStudent,
 }: {
   role: Role;
   student: StudentProfile;
   students: StudentProfile[];
-  onRoleChange: (role: Role) => void;
+  tabs: Array<{ key: TabKey; label: string; icon: React.ComponentProps<typeof Icon>['name'] }>;
+  activeTab: TabKey;
+  onBack: () => void;
+  onChangeTab: (tab: TabKey) => void;
   onSelectStudent: (id: string) => void;
 }) {
   const gap = highestGap(student);
+  const workspaceTitle = {
+    teacher: '老师工作台',
+    parent: '家长共育页',
+    student: '学生学习页',
+  }[role];
+
   return (
     <View style={screen.header}>
       <View style={screen.brandRow}>
-        <View>
-          <Text style={screen.brand}>课伴星 K12</Text>
-          <Text style={screen.brandSub}>AI 学情诊断与三方共育</Text>
+        <Pressable accessibilityRole="button" accessibilityLabel="返回身份选择" onPress={onBack} style={screen.backButton}>
+          <Icon name="chevron-back" color={colors.ink} />
+          <Text style={screen.backText}>身份</Text>
+        </Pressable>
+        <View style={screen.workspaceTitleWrap}>
+          <Text style={screen.brand}>{workspaceTitle}</Text>
+          <Text style={screen.brandSub}>课伴星 K12 · AI 学情诊断与三方共育</Text>
         </View>
         <View style={[screen.roleBadge, { backgroundColor: `${typeColor[role]}16` }]}>
           <Icon name="shield-checkmark" color={typeColor[role]} size={16} />
           <Text style={[screen.roleBadgeText, { color: typeColor[role] }]}>{roleName(role)}</Text>
         </View>
       </View>
-
-      <Segmented value={role} options={roleOptions} onChange={onRoleChange} />
 
       <View style={screen.hero}>
         <View style={screen.avatar}>
@@ -388,6 +499,31 @@ function AppHeader({
           </Pressable>
         ))}
       </ScrollView>
+
+      <SectionTitle eyebrow="Workspace" title={`${roleName(role)}二级页面模块`} />
+      <View style={screen.moduleGrid}>
+        {tabs.map((tab) => {
+          const active = tab.key === activeTab;
+          return (
+            <Pressable
+              key={tab.key}
+              accessibilityRole="button"
+              accessibilityLabel={tab.label}
+              onPress={() => onChangeTab(tab.key)}
+              style={({ pressed }) => [
+                screen.moduleCard,
+                active && { borderColor: typeColor[role], backgroundColor: `${typeColor[role]}12` },
+                pressed && uiStyles.pressed,
+              ]}
+            >
+              <View style={[screen.moduleIcon, active && { backgroundColor: typeColor[role] }]}>
+                <Icon name={tab.icon} color={active ? colors.surface : typeColor[role]} />
+              </View>
+              <Text style={[screen.moduleText, active && { color: typeColor[role] }]}>{tab.label}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -1040,42 +1176,6 @@ function ClassroomScreen({
   );
 }
 
-function BottomTabs({
-  tabs,
-  active,
-  role,
-  onChange,
-}: {
-  tabs: Array<{ key: TabKey; label: string; icon: React.ComponentProps<typeof Icon>['name'] }>;
-  active: TabKey;
-  role: Role;
-  onChange: (tab: TabKey) => void;
-}) {
-  return (
-    <View style={screen.tabBar}>
-      {tabs.map((tab) => {
-        const isActive = tab.key === active;
-        return (
-          <Pressable
-            key={tab.key}
-            accessibilityRole="button"
-            accessibilityLabel={tab.label}
-            onPress={() => onChange(tab.key)}
-            style={({ pressed }) => [screen.tabItem, pressed && uiStyles.pressed]}
-          >
-            <View style={[screen.tabIcon, isActive && { backgroundColor: typeColor[role] }]}>
-              <Icon name={tab.icon} size={19} color={isActive ? colors.surface : colors.faint} />
-            </View>
-            <Text style={[screen.tabText, isActive && { color: typeColor[role] }]} numberOfLines={1}>
-              {tab.label}
-            </Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
 const screen = StyleSheet.create({
   safe: {
     flex: 1,
@@ -1090,7 +1190,7 @@ const screen = StyleSheet.create({
   content: {
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 104,
+    paddingBottom: 30,
   },
   header: {
     gap: 12,
@@ -1112,6 +1212,75 @@ const screen = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
     fontWeight: '700',
+  },
+  identityHero: {
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#CAD8E5',
+    backgroundColor: colors.ink,
+    padding: 18,
+    gap: 10,
+  },
+  brandMark: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: `${colors.teal}80`,
+  },
+  identityTitle: {
+    color: colors.surface,
+    fontSize: 30,
+    lineHeight: 36,
+    fontWeight: '900',
+  },
+  identitySubtitle: {
+    color: '#E6F1F0',
+    fontSize: 17,
+    lineHeight: 23,
+    fontWeight: '900',
+  },
+  identityBody: {
+    color: '#B9C8D4',
+    fontSize: 14,
+    lineHeight: 22,
+    fontWeight: '600',
+  },
+  identityCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  identityIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  identityContent: {
+    flex: 1,
+    gap: 8,
+  },
+  backButton: {
+    minHeight: 38,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 9,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  backText: {
+    color: colors.ink,
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  workspaceTitleWrap: {
+    flex: 1,
   },
   roleBadge: {
     borderRadius: 8,
@@ -1204,6 +1373,39 @@ const screen = StyleSheet.create({
     color: colors.faint,
     fontSize: 11,
     fontWeight: '700',
+  },
+  moduleGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  moduleCard: {
+    flex: 1,
+    minWidth: 88,
+    minHeight: 76,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.surface,
+    padding: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+  },
+  moduleIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F0F3F7',
+  },
+  moduleText: {
+    color: colors.ink,
+    fontSize: 12,
+    lineHeight: 15,
+    fontWeight: '900',
+    textAlign: 'center',
   },
   metricsGrid: {
     flexDirection: 'row',
@@ -1388,42 +1590,5 @@ const screen = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
     alignItems: 'center',
-  },
-  tabBar: {
-    position: 'absolute',
-    left: 10,
-    right: 10,
-    bottom: 10,
-    minHeight: 68,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.surface,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingHorizontal: 6,
-    paddingVertical: 7,
-    boxShadow: '0px 8px 20px rgba(13, 20, 36, 0.12)',
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 3,
-  },
-  tabIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F0F3F7',
-  },
-  tabText: {
-    color: colors.faint,
-    fontSize: 11,
-    lineHeight: 14,
-    fontWeight: '900',
   },
 });

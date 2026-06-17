@@ -129,6 +129,67 @@ export type TeachingRoom = {
   status: 'available' | 'booked' | 'maintenance';
 };
 
+export type Institution = {
+  id: string;
+  name: string;
+  type: 'training-center' | 'independent-teacher' | 'online-school';
+  address: string;
+};
+
+export type CourseAutomationKey =
+  | 'parentReminder'
+  | 'studentReminder'
+  | 'preStudy'
+  | 'homework'
+  | 'reviewMaterial'
+  | 'studentFeedback';
+
+export type CourseAutomationItem = {
+  key: CourseAutomationKey;
+  title: string;
+  owner: 'teacher' | 'system';
+  timing: 'pre-class' | 'post-class';
+  done: number;
+  total: number;
+};
+
+export type CourseFeedbackStatus = {
+  studentId: string;
+  status: 'done' | 'pending' | 'draft';
+  note: string;
+};
+
+export type Course = {
+  id: string;
+  name: string;
+  subject: string;
+  institutionId: string;
+  teacher: string;
+  time: string;
+  date: string;
+  location: string;
+  mode: 'online' | 'offline';
+  enrolled: number;
+  capacity: number;
+  nextLesson: string;
+  focus: string;
+  prep: string;
+  homework: string;
+  review: string;
+  studentIds: string[];
+  automations: CourseAutomationItem[];
+  feedback: CourseFeedbackStatus[];
+};
+
+export type CourseEnrollment = {
+  studentId: string;
+  courseId: string;
+  institutionId: string;
+  progress: number;
+  nextTask: string;
+  status: 'active' | 'trial' | 'paused';
+};
+
 export const roleLabels: Record<Role, string> = {
   teacher: '老师',
   parent: '家长',
@@ -343,6 +404,163 @@ export const seedTeachingRooms: TeachingRoom[] = [
     schedule: '周六 15:00 2 组试听',
     equipment: ['试听卷', '家长沟通表'],
     status: 'available',
+  },
+];
+
+export const seedInstitutions: Institution[] = [
+  {
+    id: 'i-star',
+    name: '星火培优',
+    type: 'training-center',
+    address: '星河路 88 号 302',
+  },
+  {
+    id: 'i-wutong',
+    name: '梧桐学习中心',
+    type: 'training-center',
+    address: '梧桐街 16 号',
+  },
+  {
+    id: 'i-zhou',
+    name: '周老师工作室',
+    type: 'independent-teacher',
+    address: '线上小班教室 A',
+  },
+  {
+    id: 'i-online',
+    name: '云上素养课',
+    type: 'online-school',
+    address: '线上直播',
+  },
+];
+
+export const seedCourses: Course[] = [
+  {
+    id: 'course-math-7',
+    name: '七年级数学系统提升',
+    subject: '数学',
+    institutionId: 'i-zhou',
+    teacher: '周老师',
+    time: '周三 19:30-21:00',
+    date: '06/17',
+    location: '线上小班教室 A',
+    mode: 'online',
+    enrolled: 9,
+    capacity: 12,
+    nextLesson: '分式方程验根与应用题审题',
+    focus: '分式方程与几何辅助线',
+    prep: '课前 8 分钟微课 + 3 道验根题',
+    homework: '分式方程分层题组 A/B',
+    review: '错因复盘卡：去分母、验根、设未知数',
+    studentIds: ['s-lin'],
+    automations: [
+      { key: 'parentReminder', title: '家长上课提醒', owner: 'system', timing: 'pre-class', done: 8, total: 9 },
+      { key: 'studentReminder', title: '学生上课提醒', owner: 'system', timing: 'pre-class', done: 9, total: 9 },
+      { key: 'preStudy', title: '课前预习资料', owner: 'teacher', timing: 'pre-class', done: 7, total: 9 },
+      { key: 'homework', title: '课后作业', owner: 'teacher', timing: 'post-class', done: 6, total: 9 },
+      { key: 'reviewMaterial', title: '复习资料', owner: 'teacher', timing: 'post-class', done: 5, total: 9 },
+      { key: 'studentFeedback', title: '学生课后反馈', owner: 'teacher', timing: 'post-class', done: 6, total: 9 },
+    ],
+    feedback: [
+      { studentId: 's-lin', status: 'pending', note: '需要补充验根步骤和下次课前提醒。' },
+      { studentId: 's-chen', status: 'done', note: '不在本课程正式名单，仅试听反馈已完成。' },
+    ],
+  },
+  {
+    id: 'course-reading-5',
+    name: '五年级阅读理解精讲',
+    subject: '语文',
+    institutionId: 'i-wutong',
+    teacher: '李老师',
+    time: '周六 10:00-11:30',
+    date: '06/20',
+    location: '梧桐学习中心 2 号教室',
+    mode: 'offline',
+    enrolled: 5,
+    capacity: 8,
+    nextLesson: '信息定位与主旨概括',
+    focus: '阅读理解信息定位',
+    prep: '阅读短文圈画关键词',
+    homework: '主旨概括 4 篇短文',
+    review: '证据句定位清单',
+    studentIds: ['s-chen'],
+    automations: [
+      { key: 'parentReminder', title: '家长上课提醒', owner: 'system', timing: 'pre-class', done: 5, total: 5 },
+      { key: 'studentReminder', title: '学生上课提醒', owner: 'system', timing: 'pre-class', done: 4, total: 5 },
+      { key: 'preStudy', title: '课前预习资料', owner: 'teacher', timing: 'pre-class', done: 3, total: 5 },
+      { key: 'homework', title: '课后作业', owner: 'teacher', timing: 'post-class', done: 2, total: 5 },
+      { key: 'reviewMaterial', title: '复习资料', owner: 'teacher', timing: 'post-class', done: 2, total: 5 },
+      { key: 'studentFeedback', title: '学生课后反馈', owner: 'teacher', timing: 'post-class', done: 2, total: 5 },
+    ],
+    feedback: [
+      { studentId: 's-chen', status: 'draft', note: '课堂参与高，阅读证据链还需家里复述一次。' },
+    ],
+  },
+  {
+    id: 'course-english-online',
+    name: '英语阅读推断专项',
+    subject: '英语',
+    institutionId: 'i-online',
+    teacher: '王老师',
+    time: '周日 19:00-20:00',
+    date: '06/21',
+    location: '线上直播',
+    mode: 'online',
+    enrolled: 16,
+    capacity: 20,
+    nextLesson: '长难句与推断题证据链',
+    focus: '阅读推断与长难句',
+    prep: '10 个高频连接词预习',
+    homework: '阅读推断题 6 题',
+    review: '长难句拆分模板',
+    studentIds: ['s-lin', 's-chen'],
+    automations: [
+      { key: 'parentReminder', title: '家长上课提醒', owner: 'system', timing: 'pre-class', done: 15, total: 16 },
+      { key: 'studentReminder', title: '学生上课提醒', owner: 'system', timing: 'pre-class', done: 14, total: 16 },
+      { key: 'preStudy', title: '课前预习资料', owner: 'teacher', timing: 'pre-class', done: 10, total: 16 },
+      { key: 'homework', title: '课后作业', owner: 'teacher', timing: 'post-class', done: 9, total: 16 },
+      { key: 'reviewMaterial', title: '复习资料', owner: 'teacher', timing: 'post-class', done: 9, total: 16 },
+      { key: 'studentFeedback', title: '学生课后反馈', owner: 'teacher', timing: 'post-class', done: 8, total: 16 },
+    ],
+    feedback: [
+      { studentId: 's-lin', status: 'done', note: '推断题证据句定位更稳定。' },
+      { studentId: 's-chen', status: 'pending', note: '等待听力细节作业后补充反馈。' },
+    ],
+  },
+];
+
+export const seedEnrollments: CourseEnrollment[] = [
+  {
+    studentId: 's-lin',
+    courseId: 'course-math-7',
+    institutionId: 'i-zhou',
+    progress: 72,
+    nextTask: '完成分式方程验根题 3 道',
+    status: 'active',
+  },
+  {
+    studentId: 's-lin',
+    courseId: 'course-english-online',
+    institutionId: 'i-online',
+    progress: 64,
+    nextTask: '预习高频连接词 10 个',
+    status: 'active',
+  },
+  {
+    studentId: 's-chen',
+    courseId: 'course-reading-5',
+    institutionId: 'i-wutong',
+    progress: 58,
+    nextTask: '完成主旨概括 2 篇',
+    status: 'active',
+  },
+  {
+    studentId: 's-chen',
+    courseId: 'course-english-online',
+    institutionId: 'i-online',
+    progress: 46,
+    nextTask: '补交阅读推断题第 4 题订正',
+    status: 'trial',
   },
 ];
 
